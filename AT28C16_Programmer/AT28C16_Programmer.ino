@@ -11,8 +11,6 @@
 
 Led _onBoardLed(ON_BOARD_LED);
 
-#define TEST_LED 22
-Led _testLed(TEST_LED);
 
 EEPROM_Programmer ep;
 
@@ -34,11 +32,9 @@ void WriteEEPROM() {
 // the setup function runs once when you press reset or power the board
 void setup() {
 	// initialize digital pin 13 as an output.
-	pinMode(TEST_LED, OUTPUT);
 	pinMode(ON_BOARD_LED, OUTPUT);
 	Board.SetPinMode(ON_BOARD_LED, OUTPUT);
 	_onBoardLed.SetBlinkMode(250);
-	_testLed.SetBlinkMode(100);
 
 	Board.InitializeComputerCommunication(115200, APP_TITLE);
 	Board.Trace("Initializing...");
