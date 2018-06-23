@@ -1,4 +1,7 @@
-// EEPROM_Programmer.h
+/*
+AT28C16 EEPROM Programmer
+(C) Frederic Torres 2018
+*/
 
 #ifndef _EEPROM_PROGRAMMER_h
 #define _EEPROM_PROGRAMMER_h

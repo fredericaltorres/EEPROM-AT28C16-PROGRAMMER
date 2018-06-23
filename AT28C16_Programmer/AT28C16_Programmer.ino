@@ -1,17 +1,13 @@
 /*
 
 */
-
 #include <fArduino.h>
 #include "EEPROM_Programmer.h"
 
 #define APP_TITLE  "AT28C16 EEPROM Programmer Application"
 
 #define ON_BOARD_LED 13
-
 Led _onBoardLed(ON_BOARD_LED);
-
-
 EEPROM_Programmer ep;
 
 void WriteEEPROM() {
@@ -29,10 +25,7 @@ void WriteEEPROM() {
 	Board.Trace("Write EEPROM Sequence Done");
 }
 
-// the setup function runs once when you press reset or power the board
 void setup() {
-	// initialize digital pin 13 as an output.
-	pinMode(ON_BOARD_LED, OUTPUT);
 	Board.SetPinMode(ON_BOARD_LED, OUTPUT);
 	_onBoardLed.SetBlinkMode(250);
 
