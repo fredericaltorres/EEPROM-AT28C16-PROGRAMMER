@@ -1,5 +1,6 @@
 /*
-
+	AT28C16 EEPROM Programmer 
+	(C) Frederic Torres 2018
 */
 #include <fArduino.h>
 #include "EEPROM_Programmer.h"
