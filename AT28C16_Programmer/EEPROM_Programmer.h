@@ -40,15 +40,17 @@ public:
 	~EEPROM_Programmer();
 	void Init();
 
+	void SetPinsForDataBusInReadMode();
+	void SetPinsForDataBusInWriteMode();
+	void SetPinsForAddressBus8Bits();
 
-	void SetDataBusPinsForReadMode();
-	void SetDataBusPinsForWriteMode();
 	String GetStatus();
 	void SetDataBusWriteData(byte d);
+	byte GetDataBusReadData();
 	void CheckForReadMode();
 	void CheckForWriteMode();
 
-	void SetPinsForAddressBus8Bits();
+	
 	void SetAddressBus8bits(byte addr8bit);
 	void SetDataBusAndAddressBus8bitWriteData(byte data, byte addr);
 

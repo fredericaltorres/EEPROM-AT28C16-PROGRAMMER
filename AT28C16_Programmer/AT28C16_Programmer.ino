@@ -15,15 +15,37 @@ void WriteEEPROM() {
 	Board.Trace("About to Write EEPROM Sequence");
 	delay(1000 * 4);
 	Board.Trace("Writing EEPROM Sequence...");
+	int baseValue = 1;
 
-	for (int addr = 0; addr < 256; addr++) {
+	for (int addr = 0; addr < 8; addr++) {
 		ep.SetAddressBus8bits(addr);
-		ep.SetDataBusWriteData(addr);
+
+		int val = baseValue << addr;
+		ep.SetDataBusWriteData(val);
+
 		ep.InitiateWriteByteOperation();
 		Board.Trace(ep.GetStatus());
-		delay(100);
+		delay(1000);
 	}
 	Board.Trace("Write EEPROM Sequence Done");
+	Board.Trace("");
+}
+
+void ReadEEPROM() {
+	Board.Trace("About to Read EEPROM Sequence");
+	delay(1000 * 4);
+	Board.Trace("Reading EEPROM Sequence...");
+	int baseValue = 1;
+
+	for (int addr = 0; addr < 8; addr++) {
+
+		ep.SetAddressBus8bits(addr);
+		ep.GetDataBusReadData();
+		Board.Trace(ep.GetStatus());
+		delay(1000);
+	}
+	Board.Trace("Read EEPROM Sequence Done");
+	Board.Trace("");
 }
 
 void setup() {
@@ -33,12 +55,15 @@ void setup() {
 	Board.InitializeComputerCommunication(115200, APP_TITLE);
 	Board.Trace("Initializing...");
 	ep.Init();
+	Board.Trace("AnimationStartSequence...");
 	ep.AnimationStartSequence();
-	ep.AnimationWorkProperlySequence();
-	WriteEEPROM();
+	// Board.Trace("AnimationWorkProperlySequence...");
+	// ep.AnimationWorkProperlySequence();
+	// WriteEEPROM();
+	Board.Trace(ep.GetStatus());
 }
 
 
 void loop() {
-
+	ReadEEPROM();
 }

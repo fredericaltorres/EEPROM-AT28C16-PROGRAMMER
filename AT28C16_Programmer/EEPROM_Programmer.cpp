@@ -1,6 +1,6 @@
 /*
-AT28C16 EEPROM Programmer
-(C) Frederic Torres 2018
+	AT28C16 EEPROM Programmer
+	(C) Frederic Torres 2018
 */
 #include <fArduino.h>
 #include "EEPROM_Programmer.h"
@@ -12,12 +12,15 @@ void EEPROM_Programmer::Init() {
 	pinMode(EEPROM_WRITE_ENABLE, OUTPUT);
 	this->SetOutputEnable();
 
-	Board.Trace("EEPROM_Programmer Initialization");
+	Board.Trace("EEPROM_Programmer Initialization started");
+	Board.Trace("Address bus limited to 8bits - 0 to 255 range for now");
 	this->_dataMode = DATA_MODE::READ;
-	this->SetPinsForAddressBus8Bits();
+	this->SetPinsForAddressBus8Bits(); // Initialize gpios for addr bus in output mode
+	this->SetPinsForDataBusInReadMode(); // Initialize gpios for data bus in input mode - EEPROM read mode by default
 	this->SetAddressBus8bits(0);
-	this->SetDataBusPinsForWriteMode();
-	this->SetDataBusWriteData(0);
+	this->GetDataBusReadData(); // Read the current value at address 0
+	Board.Trace(this->GetStatus());
+	Board.Trace("EEPROM_Programmer Initialization done");
 }
 EEPROM_Programmer::EEPROM_Programmer() {
 
@@ -29,13 +32,13 @@ EEPROM_Programmer::~EEPROM_Programmer() {
 void EEPROM_Programmer::CheckForReadMode()
 {
 	if (this->_dataMode != DATA_MODE::READ)
-		this->SetDataBusPinsForReadMode();
+		this->SetPinsForDataBusInReadMode();
 }
 
 void EEPROM_Programmer::CheckForWriteMode()
 {
 	if (this->_dataMode != DATA_MODE::WRITE)
-		this->SetDataBusPinsForWriteMode();
+		this->SetPinsForDataBusInWriteMode();
 }
 
 void EEPROM_Programmer::SetDataBusWriteData(byte data)
@@ -50,12 +53,27 @@ void EEPROM_Programmer::SetDataBusWriteData(byte data)
 	}
 }
 
-void EEPROM_Programmer::SetDataBusAndAddressBus8bitWriteData(byte data, byte addr) {
+byte EEPROM_Programmer::GetDataBusReadData()
+{
+	this->CheckForReadMode();
+	byte data = 0;
+	for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin -= 1)
+	{
+		int pinVal = digitalRead(pin);
+		// Board.Trace(StringFormat.Format("Read pin:%d, val:%d", pin, pinVal));
+		data = (data << 1) + pinVal;
+	}
+	this->DataValue = data;
+	return data;	
+}
+
+void EEPROM_Programmer::SetDataBusAndAddressBus8bitWriteData(byte data, byte addr) 
+{
 	this->SetAddressBus8bits(addr);
 	this->SetDataBusWriteData(data);
 }
 
-void EEPROM_Programmer::SetDataBusPinsForReadMode()
+void EEPROM_Programmer::SetPinsForDataBusInReadMode()
 {
 	this->_dataMode = DATA_MODE::READ;
 	for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1)
@@ -64,7 +82,7 @@ void EEPROM_Programmer::SetDataBusPinsForReadMode()
 	}
 }
 
-void EEPROM_Programmer::SetDataBusPinsForWriteMode()
+void EEPROM_Programmer::SetPinsForDataBusInWriteMode()
 {
 	this->_dataMode = DATA_MODE::WRITE;
 	for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1)
@@ -74,7 +92,7 @@ void EEPROM_Programmer::SetDataBusPinsForWriteMode()
 	}
 }
 
-
+//  Address gpio are initialized a output
 void EEPROM_Programmer::SetPinsForAddressBus8Bits()
 {
 	for (int pin = EEPROM_A0; pin <= EEPROM_A7; pin += 1)
@@ -108,10 +126,10 @@ String EEPROM_Programmer::GetStatus() {
 
 
 void EEPROM_Programmer::AnimationStartSequence() {
-	int wait = 125;
+	int wait = 100;
 	this->SetDataBusAndAddressBus8bitWriteData(255, 255);
 	delay(wait);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 6; i++) {
 		this->SetDataBusAndAddressBus8bitWriteData(0, 255);
 		delay(wait);
 		this->SetDataBusAndAddressBus8bitWriteData(255, 0);
@@ -119,6 +137,7 @@ void EEPROM_Programmer::AnimationStartSequence() {
 	}
 	this->SetDataBusAndAddressBus8bitWriteData(0, 0);
 	delay(wait * 4);
+	this->SetOutputEnable();
 }
 
 void EEPROM_Programmer::AnimationWorkProperlySequence() {
@@ -130,22 +149,33 @@ void EEPROM_Programmer::AnimationWorkProperlySequence() {
 		delay(wait);
 	}
 	this->SetDataBusAndAddressBus8bitWriteData(0, 0);
+	this->SetOutputEnable();
 }
 
 void EEPROM_Programmer::SetOutputEnable() {
-	digitalWrite(EEPROM_OUTPUT_ENABLE, LOW); // Active Low
-	digitalWrite(EEPROM_WRITE_ENABLE, HIGH); // Active Low, no write operation
-	this->SetDataBusPinsForReadMode();
+
+	// Active low, active now, output enable now
+	digitalWrite(EEPROM_OUTPUT_ENABLE, LOW);
+
+	// Active Low, High mean no write now
+	digitalWrite(EEPROM_WRITE_ENABLE, HIGH);
+	this->SetPinsForDataBusInReadMode();
 }
 void EEPROM_Programmer::InitiateWriteByteOperation() {
 
-	digitalWrite(EEPROM_OUTPUT_ENABLE, HIGH); // Output disable 
+	// Active low, active now, output enable now
+	// Set high now, not in output mode now, we are in input mode now
+	digitalWrite(EEPROM_OUTPUT_ENABLE, HIGH);
+	
+	// Active Low, High mean no write now
+	// Active write operation now, for a short time
 	digitalWrite(EEPROM_WRITE_ENABLE, LOW); // Write enable
 
 	cli(); sei(); // delayMicroseconds(1);
 	//_delay_us(300);
 	//asm("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");   
-	delay(50);
+	delay(1);
 
+	// Store write operation
 	this->SetOutputEnable();
 }
