@@ -40,7 +40,7 @@ void WriteEEPROM() {
 		ep.SetDataBusWriteData(val);
 		Board.Trace(ep.GetStatus());
 		Board.Trace("About to initiate the write op");
-		delay(1000*3);
+		delay(100);
 		ep.InitiateWriteByteOperation();
 		delay(100);
 	}
@@ -56,12 +56,10 @@ void ReadEEPROM() {
 
 	for (int addr = 0; addr < MAX_ADDR; addr++) {
 
-		Board.Trace(">");
 		ep.SetAddressBus8bits(addr);		
 		ep.GetDataBusReadData();
 		Board.Trace(ep.GetStatus());
-		delay(1000);
-		Board.Trace("");
+		delay(150);
 	}
 	Board.Trace("Read EEPROM Sequence Done");
 	Board.Trace("");
@@ -81,7 +79,7 @@ void setup() {
 	ep.AnimationWorkProperlySequence();
 	*/
 
-	WriteEEPROM();
+//	WriteEEPROM();
 
 	//Board.Trace(ep.GetStatus());
 	//ep.SetAddressBus8bits(0);

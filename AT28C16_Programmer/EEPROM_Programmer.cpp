@@ -4,7 +4,7 @@
 */
 #include <fArduino.h>
 #include "EEPROM_Programmer.h"
-#define DEEP_TRACE 1
+// #define DEEP_TRACE 1
 
 void EEPROM_Programmer::Init() {
 
