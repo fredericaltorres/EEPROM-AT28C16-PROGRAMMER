@@ -4,6 +4,7 @@
 */
 #include <fArduino.h>
 #include "EEPROM_Programmer.h"
+#define DEEP_TRACE 1
 
 void EEPROM_Programmer::Init() {
 
@@ -45,11 +46,17 @@ void EEPROM_Programmer::SetDataBusWriteData(byte data)
 {
 	this->DataValue = data;
 	this->CheckForWriteMode();
+	#if DEEP_TRACE
+		Board.Trace(StringFormat.Format("@setData %d", data));
+	#endif
 	for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1)
 	{
-		byte bit = data & 1;
+		byte bit = data & 1;		
 		digitalWrite(pin, bit);
 		data = data >> 1;
+		#if DEEP_TRACE
+		Board.Trace(StringFormat.Format("@setData pin:%d bit:%d rem:%d", pin, bit, data));
+		#endif
 	}
 }
 
@@ -60,13 +67,18 @@ byte EEPROM_Programmer::GetDataBusReadData()
 	for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin -= 1)
 	{
 		int pinVal = digitalRead(pin);
-		// Board.Trace(StringFormat.Format("Read pin:%d, val:%d", pin, pinVal));
+		#if DEEP_TRACE
+		Board.Trace(StringFormat.Format("@read pin:%d, val:%d", pin, pinVal));
+		#endif
 		data = (data << 1) + pinVal;
 	}
 	this->DataValue = data;
 	return data;	
 }
 
+// Set the address bus and data bus for write
+// Do not execute the write operation
+// InitiateWriteByteOperation() must be call to execute the write operation
 void EEPROM_Programmer::SetDataBusAndAddressBus8bitWriteData(byte data, byte addr) 
 {
 	this->SetAddressBus8bits(addr);
@@ -104,11 +116,18 @@ void EEPROM_Programmer::SetPinsForAddressBus8Bits()
 
 void EEPROM_Programmer::SetAddressBus8bits(byte addr8bit) {
 	this->AddrValue = addr8bit;
+	#if DEEP_TRACE
+	Board.Trace("");
+	Board.Trace(StringFormat.Format("@setAddr %d", addr8bit));
+	#endif		
 	for (int pin = EEPROM_A0; pin <= EEPROM_A7; pin += 1)
 	{
 		byte bit = addr8bit & 1;
 		digitalWrite(pin, bit);
 		addr8bit = addr8bit >> 1;
+		#if DEEP_TRACE
+		Board.Trace(StringFormat.Format("@setAddr pin:%d bit:%d rem:%d", pin, bit, addr8bit));
+		#endif
 	}
 }
 
@@ -152,6 +171,12 @@ void EEPROM_Programmer::AnimationWorkProperlySequence() {
 	this->SetOutputEnable();
 }
 
+void EEPROM_Programmer::SetOutputDisable() {
+
+	// Active low, active now, output enable now
+	digitalWrite(EEPROM_OUTPUT_ENABLE, HIGH);
+}
+
 void EEPROM_Programmer::SetOutputEnable() {
 
 	// Active low, active now, output enable now
@@ -170,12 +195,20 @@ void EEPROM_Programmer::InitiateWriteByteOperation() {
 	// Active Low, High mean no write now
 	// Active write operation now, for a short time
 	digitalWrite(EEPROM_WRITE_ENABLE, LOW); // Write enable
+	
+	//cli(); 
+	//delayMicroseconds(1);
+	//sei(); 
+	
+	// delayMicroseconds(1);
 
-	cli(); sei(); // delayMicroseconds(1);
 	//_delay_us(300);
 	//asm("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");   
+
 	delay(1);
 
+	digitalWrite(EEPROM_WRITE_ENABLE, HIGH); // Write enable
+	delay(15);
 	// Store write operation
 	this->SetOutputEnable();
 }

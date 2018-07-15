@@ -59,6 +59,7 @@ public:
 	//#define EEPROM_OUTPUT_ENABLE 40
 	//#define EEPROM_WRITE_ENABLE 41
 	void SetOutputEnable();
+	void SetOutputDisable();
 	void InitiateWriteByteOperation();
 };
 

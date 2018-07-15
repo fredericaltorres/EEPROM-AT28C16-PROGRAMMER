@@ -1,6 +1,13 @@
 /*
 	AT28C16 EEPROM Programmer 
 	(C) Frederic Torres 2018
+
+	based on `Build an Arduino EEPROM programmer`
+	By Ben Eater
+	https://www.youtube.com/watch?v=K88pgWhEb1M
+
+	https://github.com/beneater/eeprom-programmer
+
 */
 #include <fArduino.h>
 #include "EEPROM_Programmer.h"
@@ -11,21 +18,31 @@
 Led _onBoardLed(ON_BOARD_LED);
 EEPROM_Programmer ep;
 
+#define MAX_ADDR 16
+
 void WriteEEPROM() {
 	Board.Trace("About to Write EEPROM Sequence");
-	delay(1000 * 4);
+	delay(1000 * 1);
 	Board.Trace("Writing EEPROM Sequence...");
 	int baseValue = 1;
 
-	for (int addr = 0; addr < 8; addr++) {
+	for (int addr = 0; addr < MAX_ADDR; addr++) {
+
 		ep.SetAddressBus8bits(addr);
-
-		int val = baseValue << addr;
+		int val = addr;
+		if (addr % 2 == 0) {
+			val = 6;
+		}
+		else {
+			val = 14;
+		}
+		
 		ep.SetDataBusWriteData(val);
-
-		ep.InitiateWriteByteOperation();
 		Board.Trace(ep.GetStatus());
-		delay(1000);
+		Board.Trace("About to initiate the write op");
+		delay(1000*3);
+		ep.InitiateWriteByteOperation();
+		delay(100);
 	}
 	Board.Trace("Write EEPROM Sequence Done");
 	Board.Trace("");
@@ -33,16 +50,18 @@ void WriteEEPROM() {
 
 void ReadEEPROM() {
 	Board.Trace("About to Read EEPROM Sequence");
-	delay(1000 * 4);
+	delay(1000 * 2);
 	Board.Trace("Reading EEPROM Sequence...");
 	int baseValue = 1;
 
-	for (int addr = 0; addr < 8; addr++) {
+	for (int addr = 0; addr < MAX_ADDR; addr++) {
 
-		ep.SetAddressBus8bits(addr);
+		Board.Trace(">");
+		ep.SetAddressBus8bits(addr);		
 		ep.GetDataBusReadData();
 		Board.Trace(ep.GetStatus());
 		delay(1000);
+		Board.Trace("");
 	}
 	Board.Trace("Read EEPROM Sequence Done");
 	Board.Trace("");
@@ -55,14 +74,22 @@ void setup() {
 	Board.InitializeComputerCommunication(115200, APP_TITLE);
 	Board.Trace("Initializing...");
 	ep.Init();
+	/*
 	Board.Trace("AnimationStartSequence...");
 	ep.AnimationStartSequence();
-	// Board.Trace("AnimationWorkProperlySequence...");
-	// ep.AnimationWorkProperlySequence();
-	// WriteEEPROM();
-	Board.Trace(ep.GetStatus());
-}
+	Board.Trace("AnimationWorkProperlySequence...");
+	ep.AnimationWorkProperlySequence();
+	*/
 
+	WriteEEPROM();
+
+	//Board.Trace(ep.GetStatus());
+	//ep.SetAddressBus8bits(0);
+	//ep.SetDataBusWriteData(0); // data gpios are in output mode and low
+	//ep.SetOutputEnable();
+	//delay(2001);
+	//ep.SetOutputDisable();
+}
 
 void loop() {
 	ReadEEPROM();
